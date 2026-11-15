@@ -98,3 +98,14 @@ The additional local HiGHS run with `py src/demand_stress_test.py --factor 0.20 
 - Compared with baseline EUR 45,657.45, the modeled objective declines by approximately **21.2%**. This comparison changes the demand assumptions and is not an estimate of actual retailer losses.
 
 Together, the 40% and 20% scenarios show an increasingly demand-constrained model: demand reductions initially change shipment composition without aggregate shipment reduction, then also reduce aggregate shipments and increase warehouse retention. These intentionally extreme shocks explore model behavior, not likely fluctuations in actual Zara sales. Additional sensitivity scenarios or repeated synthetic datasets would be needed to establish broad robustness.
+
+
+### Partial-exposure sensitivity: rho=0.8 rerun (15 November 2026)
+
+The local command `py src/zara_sensitivity_safe.py --only "rho=0.8" --seconds 300 --retry-timeouts` reran ONLY the partial-exposure factor 0.8 scenario, keeping all other input assumptions unchanged. It reported **optimal** termination and was archived at `results/zara_sensitivity_rho_0_8_2026-11-15.csv`.
+
+- Modeled objective **EUR 45,665.60** = EUR 44,058.05 expected sales revenue + EUR 1,607.55 assigned retained-stock value.
+- 564.67 expected sales units, 392 units shipped, 91 retained, 48 full-exposure + 2 partial-only combinations.
+- Compared with reproduced baseline `rho=0.6` objective EUR 45,657.45, this is **EUR 8.15 higher** (approximately **0.0179%**). It is possible for expected sales units to decline while revenue rises because product prices differ.
+- The older 120-second sensitivity output contained a time-limited feasible incumbent EUR 45,625.90; that is **not** the proven optimum and should be replaced in the principal sensitivity results table.
+- The new output CSV reports `status=optimal` but does not record the solver bound or numeric relative MIP gap. The 300-second rerun must be identified separately from the original 120-second sensitivity experiments. The older `results/zara_sensitivity_detailed.csv` is retained as an archival record, not the authoritative `rho=0.8` result.
