@@ -31,3 +31,13 @@ Reproduction instructions, exact software versions and full experiments will be 
 
 ## Citation
 Caro, F., Gallien, J., Díaz, M., García, J., Corredoira, J. M., Montes, M., Ramos, J. A., and Correa, J. (2010). *Zara Uses Operations Research to Reengineer Its Global Distribution Process*. Interfaces, 40(1), 71–84. https://doi.org/10.1287/inte.1090.0472
+
+
+### Fresh local baseline solver run (15 November 2026)
+- Executed on Windows using **Pyomo 6.10.1**, **highspy 1.15.1**.
+- Command: `py zara_sensitivity_safe.py --only Baseline --seconds 180`.
+- Console reported six CSV inputs loaded, saturation/big-M checks passed, and one scenario with **optimal** termination.
+- Saved result: `results/baseline_reproduction_2026-11-15.csv`.
+- Objective: **EUR 45,657.45**, expected sales revenue **EUR 43,996.00**, retained-inventory value **EUR 1,661.45**, 392 units shipped, 91 retained, and 50/50 full exposure.
+- The CSV records **`status=optimal`** but does **not include a solver bound or MIP-gap column**. Do not claim an independently verified exactly-zero gap from this output alone.
+- Note: the fresh local run verifies the baseline solve, but does not yet rerun all sensitivity, benchmark, and ablation experiments.
