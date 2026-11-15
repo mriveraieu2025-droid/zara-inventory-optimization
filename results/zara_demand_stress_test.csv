@@ -1,0 +1,2 @@
+demand_factor,status,objective_eur,sales_revenue_eur,retained_value_eur,expected_sales_units,units_shipped,units_retained,full_exposure,partial_only_exposure,no_exposure,positive_demand_binding_count,zero_demand_count,changed_shipment_variables,note
+0.40,optimal,44883.0,43200.55,1682.45,559.15,392,91,50,0,0,11,0,53,optimal
