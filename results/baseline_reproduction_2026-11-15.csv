@@ -1,0 +1,2 @@
+group,scenario,setting,status,objective_eur,sales_revenue_eur,retained_value_eur,expected_sales_units,units_shipped,units_retained,full_exposure,partial_only_exposure,no_exposure,change_vs_baseline_pct,note
+Base case,Baseline,original CSVs,optimal,45657.45,43996.0,1661.45,566.2,392,91,50,0,0,0.0,optimal
