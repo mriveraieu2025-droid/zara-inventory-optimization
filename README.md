@@ -35,7 +35,7 @@ Caro, F., Gallien, J., Díaz, M., García, J., Corredoira, J. M., Montes, M., Ra
 
 ### Fresh local baseline solver run (15 November 2026)
 - Executed on Windows using **Pyomo 6.10.1**, **highspy 1.15.1**.
-- Command: `py zara_sensitivity_safe.py --only Baseline --seconds 180`.
+- Command: `py src/zara_sensitivity_safe.py --only Baseline --seconds 180`.
 - Console reported six CSV inputs loaded, saturation/big-M checks passed, and one scenario with **optimal** termination.
 - Saved result: `results/baseline_reproduction_2026-11-15.csv`.
 - Objective: **EUR 45,657.45**, expected sales revenue **EUR 43,996.00**, retained-inventory value **EUR 1,661.45**, 392 units shipped, 91 retained, and 50/50 full exposure.
@@ -64,13 +64,14 @@ py src/solve_zara_final.py
 
 The main script loads the six input CSVs from `data/` and saves the baseline allocation to `results/`. Keep a copy of saved outputs before rerunning if you need to preserve an earlier allocation variant.
 
-## Demand-scarcity stress test (new experiment, results not yet generated)
+## Demand-scarcity stress test (two scenarios completed)
 
 ```powershell
 py src/demand_stress_test.py --factor 0.40 --seconds 180
+py src/demand_stress_test.py --factor 0.20 --seconds 180
 ```
 
-The script changes **forecast demand only**, with integer half-up rounding, and writes `results/zara_demand_stress_test.csv`. It does **not** modify the original inputs or baseline outputs. If a solve hits the time limit, it records the status without asserting optimality. Additional factors can be tested in separate runs. This is a proposed robustness experiment; do not cite results until the CSV has been generated and verified.
+The script changes **forecast demand only**, with integer half-up rounding, and writes `results/zara_demand_stress_test.csv`. It does **not** modify the original inputs or baseline outputs. If a solve hits the time limit, it records the status without asserting optimality. Additional factors can be tested in separate runs. Both runs have been completed and the output CSV has been saved to this repository. The saved statuses are solver-reported optimal; numerical MIP gaps and raw bounds were not exported.
 
 
 ### Demand sensitivity: 40% forecast scenario (15 November 2026)
@@ -83,4 +84,17 @@ A new local Pyomo/HiGHS run with `py src/demand_stress_test.py --factor 0.40 --s
 - **53 of 200 individual shipment quantities differ** from the archived baseline solution (a count of changed entries, not the number of units reallocated).
 - Same aggregate retained quantity but different article/size composition: retained value differs from baseline.
 
-**Interpretation:** reducing all synthetic forecasts to 40% of their original levels decreases modeled value and changes the allocation, but demand is still nonbinding in most combinations. This is an intentionally severe sensitivity scenario, not an estimate of actual Zara demand. An additional lower-demand scenario would be required to characterize a more strongly demand-limited case.
+**Interpretation:** reducing all synthetic forecasts to 40% of their original levels decreases modeled value and changes the allocation, but demand is still nonbinding in most combinations. This is an intentionally severe sensitivity scenario, not an estimate of actual Zara demand. A 20% demand stress test below produces a more strongly demand-constrained case.
+
+### Demand sensitivity: 20% forecast scenario (15 November 2026)
+
+The additional local HiGHS run with `py src/demand_stress_test.py --factor 0.20 --seconds 180` reports **optimal** termination, archived together with the 40% result at `results/zara_demand_stress_test.csv`. Forecasts were independently multiplied by 0.20 with half-up integer rounding; original input CSVs were unchanged.
+
+- Objective: **EUR 35,977.57** = **EUR 32,674.62** expected sales revenue + **EUR 3,302.95** assigned retained-stock value.
+- **446.48** expected sales units, **360** units shipped and **123** units retained (warehouse total remains 483).
+- **49 full-exposure**, **1 partial-exposure** store–article combination, **0 no-exposure**.
+- **139/200** positive demand ceilings binding, versus zero in the original baseline.
+- **106/200** individual shipment variables differ from the baseline solution; this counts changed decisions, not the total quantity of stock relocated.
+- Compared with baseline EUR 45,657.45, the modeled objective declines by approximately **21.2%**. This comparison changes the demand assumptions and is not an estimate of actual retailer losses.
+
+Together, the 40% and 20% scenarios show an increasingly demand-constrained model: demand reductions initially change shipment composition without aggregate shipment reduction, then also reduce aggregate shipments and increase warehouse retention. These intentionally extreme shocks explore model behavior, not likely fluctuations in actual Zara sales. Additional sensitivity scenarios or repeated synthetic datasets would be needed to establish broad robustness.
