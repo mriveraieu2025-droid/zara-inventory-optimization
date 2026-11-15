@@ -141,3 +141,28 @@ Results will be written to `results/zara_exposure_robustness.csv`. Original base
 - Difference vs the softened optimized model: **28.12% lower**, vs 32.28% lower under the original exposure rule.
 - **Scope note:** the exposure-ignorant allocation was *not* reoptimized for the softened sales rule; it is the previously saved no-exposure allocation evaluated under the new common rule. The 20% residual factor is hypothetical, not an estimate of observed retail behavior.
 - The CSV records solver-reported optimal termination but does not include a numerical solver bound or MIP gap.
+
+
+## Stronger benchmark: deterministic exposure-aware greedy policy
+
+Source: \`src/exposure_aware_greedy.py\`. This script is deliberately **not** a MILP solver and does **not** use the saved MILP allocation to choose shipments. It uses the six synthetic input CSV files to make a deterministic greedy decision at each step:
+
+1. Consider feasible bundles of missing major sizes that would activate partial/full exposure.
+2. Consider feasible one-unit additions for individual store/article/size combinations.
+3. For each action, compute its incremental current-sales value using the **full original exposure and piecewise saturation model**, minus the retained-stock opportunity value of the shipped units.
+4. Select the strictly positive action with the largest net gain per unit; use stable input order to resolve ties.
+5. Repeat until no improving feasible action remains.
+
+The policy respects article/size warehouse stock and each store's receiving capacity. It evaluates both its own shipments and the saved baseline MILP shipments under the **same original model**, and checks the baseline objective is EUR 45,657.45. The script outputs:
+- \`results/zara_exposure_aware_greedy_summary.csv\`
+- \`results/zara_exposure_aware_greedy_shipments.csv\`
+
+Run in the project root:
+
+\`\`\`powershell
+py src/exposure_aware_greedy.py
+\`\`\`
+
+An independently tested copy on the preserved input dataset obtained a preliminary objective **EUR 45,507.60**, with 392 shipped, 91 retained, 47 fully exposed, two partially exposed and one non-exposed store/article combinations. This is approximately **0.33%** below the reproduced MILP objective, but is **not** a measured gain in real Zara sales. Before inclusion in the final report, reproduce the output from the GitHub script and preserve both output CSVs.
+
+This is a much stronger heuristic than the request-based or demand-proportional baselines, since it **explicitly uses the model's exposure, saturation, price, and retention assumptions**. Accordingly, it is not an independent empirical validation of those assumptions.
