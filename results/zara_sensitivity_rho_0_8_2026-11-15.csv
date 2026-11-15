@@ -1,0 +1,2 @@
+group,scenario,setting,status,objective_eur,sales_revenue_eur,retained_value_eur,expected_sales_units,units_shipped,units_retained,full_exposure,partial_only_exposure,no_exposure,change_vs_baseline_pct,note
+Partial factor,rho=0.8,0.8,optimal,45665.6,44058.05,1607.55,564.67,392,91,48,2,0,,optimal
