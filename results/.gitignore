@@ -1,6 +1,0 @@
-__pycache__/
-*.py[cod]
-.venv/
-venv/
-.env
-results/zara_sensitivity_results.csv
