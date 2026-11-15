@@ -50,3 +50,24 @@ Caro, F., Gallien, J., Díaz, M., García, J., Corredoira, J. M., Montes, M., Ra
 - **392 shipped**, **91 retained**, **566.20 modeled expected sales**, **50/50 full exposure**.
 - Script saved `revised_allocation.csv` and `revised_remaining_stock.csv` on the user's computer. These fresh output files are archived in `results/revised_allocation.csv` and `results/revised_remaining_stock.csv`.
 - Reported solver status is optimal; no raw solver bound/gap shown in the captured terminal output. Separate sensitivity and ablation experiment reruns are pending.
+
+
+## Re-run the verified baseline from this repository
+
+From the repository root, with Python, Pyomo and HiGHS installed:
+
+```powershell
+py -m pip install -r requirements.txt
+py src/verify_saved_results.py
+py src/solve_zara_final.py
+```
+
+The main script loads the six input CSVs from `data/` and saves the baseline allocation to `results/`. Keep a copy of saved outputs before rerunning if you need to preserve an earlier allocation variant.
+
+## Demand-scarcity stress test (new experiment, results not yet generated)
+
+```powershell
+py src/demand_stress_test.py --factor 0.40 --seconds 180
+```
+
+The script changes **forecast demand only**, with integer half-up rounding, and writes `results/zara_demand_stress_test.csv`. It does **not** modify the original inputs or baseline outputs. If a solve hits the time limit, it records the status without asserting optimality. Additional factors can be tested in separate runs. This is a proposed robustness experiment; do not cite results until the CSV has been generated and verified.
