@@ -41,3 +41,12 @@ Caro, F., Gallien, J., Díaz, M., García, J., Corredoira, J. M., Montes, M., Ra
 - Objective: **EUR 45,657.45**, expected sales revenue **EUR 43,996.00**, retained-inventory value **EUR 1,661.45**, 392 units shipped, 91 retained, and 50/50 full exposure.
 - The CSV records **`status=optimal`** but does **not include a solver bound or MIP-gap column**. Do not claim an independently verified exactly-zero gap from this output alone.
 - Note: the fresh local run verifies the baseline solve, but does not yet rerun all sensitivity, benchmark, and ablation experiments.
+
+
+### Main-model reproduction (15 November 2026)
+- On Windows, ran `py solve_zara_final.py` with Pyomo 6.10.1 and highspy 1.15.1.
+- Console: all six CSVs loaded; saturation/big-M checks passed; **Solver termination: optimal**; **ALL SOLUTION CHECKS PASSED!**
+- Objective **EUR 45,657.45** = EUR 43,996.00 modeled sales revenue + EUR 1,661.45 assigned retained-inventory value.
+- **392 shipped**, **91 retained**, **566.20 modeled expected sales**, **50/50 full exposure**.
+- Script saved `revised_allocation.csv` and `revised_remaining_stock.csv` on the user's computer. These fresh output files have not yet been committed to this repository.
+- Reported solver status is optimal; no raw solver bound/gap shown in the captured terminal output. Separate sensitivity and ablation experiment reruns are pending.
