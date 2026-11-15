@@ -71,3 +71,16 @@ py src/demand_stress_test.py --factor 0.40 --seconds 180
 ```
 
 The script changes **forecast demand only**, with integer half-up rounding, and writes `results/zara_demand_stress_test.csv`. It does **not** modify the original inputs or baseline outputs. If a solve hits the time limit, it records the status without asserting optimality. Additional factors can be tested in separate runs. This is a proposed robustness experiment; do not cite results until the CSV has been generated and verified.
+
+
+### Demand sensitivity: 40% forecast scenario (15 November 2026)
+
+A new local Pyomo/HiGHS run with `py src/demand_stress_test.py --factor 0.40 --seconds 180` reports **optimal** termination. Forecast demand alone was rescaled, with all original stock, capacities, prices, exposure and saturation parameters unchanged. The result is archived at `results/zara_demand_stress_test.csv`.
+
+- Modeled objective: **EUR 44,883.00**, consisting of **EUR 43,200.55** modeled current sales revenue and **EUR 1,682.45** assigned retained-stock value.
+- 392 units shipped; 91 retained; 559.15 expected sales units; all 50 store–article pairs full exposure.
+- **11 of 200 positive forecast-demand ceilings bind**, compared with zero at baseline.
+- **53 of 200 individual shipment quantities differ** from the archived baseline solution (a count of changed entries, not the number of units reallocated).
+- Same aggregate retained quantity but different article/size composition: retained value differs from baseline.
+
+**Interpretation:** reducing all synthetic forecasts to 40% of their original levels decreases modeled value and changes the allocation, but demand is still nonbinding in most combinations. This is an intentionally severe sensitivity scenario, not an estimate of actual Zara demand. An additional lower-demand scenario would be required to characterize a more strongly demand-limited case.
