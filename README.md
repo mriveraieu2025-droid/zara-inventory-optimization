@@ -166,3 +166,22 @@ py src/exposure_aware_greedy.py
 An independently tested copy on the preserved input dataset obtained a preliminary objective **EUR 45,507.60**, with 392 shipped, 91 retained, 47 fully exposed, two partially exposed and one non-exposed store/article combinations. This is approximately **0.33%** below the reproduced MILP objective, but is **not** a measured gain in real Zara sales. Before inclusion in the final report, reproduce the output from the GitHub script and preserve both output CSVs.
 
 This is a much stronger heuristic than the request-based or demand-proportional baselines, since it **explicitly uses the model's exposure, saturation, price, and retention assumptions**. Accordingly, it is not an independent empirical validation of those assumptions.
+
+
+### Verified exposure-aware greedy benchmark (15 November 2026)
+
+Local reproduction using `py src/exposure_aware_greedy.py` passed the warehouse-stock and store-capacity checks and reproduced the same full-model evaluation of the saved MILP allocation.
+
+Saved results:
+- `results/zara_exposure_aware_greedy_summary.csv` (reported outcomes)
+- `results/zara_exposure_aware_greedy_shipments.csv` (200 integer shipment decisions)
+
+Independent recalculation from the six input CSVs verified:
+- **EUR 45,507.60 modeled objective** = **EUR 43,872.75 current sales revenue** + **EUR 1,634.85 assigned retained value**.
+- **562.29 expected sales units**, **392 shipped**, **91 retained**; all warehouse article/size balances and all ten receiving-capacity inequalities satisfied.
+- **47 full-exposure, 2 partial-only, 1 no-exposure** store–article combinations.
+- **80 of 200** individual shipment quantities differ from the saved full MILP; because the total shipment count is identical, **77 units are reallocated** between shipment locations/categories (half of sum of absolute shipment differences).
+- MILP objective **EUR 45,657.45**, which is **EUR 149.85 (0.3293%) greater relative to the greedy benchmark**.
+- This is a deterministic **model-aware heuristic**, using the same exposure, saturation, prices, and retention assumptions as the MILP. Near-optimality on this ONE synthetic instance does not prove greedy always performs this well, nor does it independently validate the sales assumptions.
+
+Final paper should present this strong comparator along with the original simpler request and demand-proportional benchmarks, avoiding claims of guaranteed large MILP improvements over well-informed heuristics.
