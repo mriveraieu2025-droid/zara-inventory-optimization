@@ -1,0 +1,2 @@
+residual_exposure_factor,partial_exposure_factor,status,optimized_soft_objective_eur,optimized_soft_sales_revenue_eur,optimized_soft_retained_value_eur,optimized_full_exposure,optimized_partial_only,optimized_no_exposure,optimized_shipped,optimized_retained,full_baseline_allocation_soft_eval_eur,no_exposure_policy_soft_eval_eur,improvement_vs_no_exposure_policy_pct,note
+0.20,0.60,optimal,45657.45,43996.0,1661.45,50,0,0,392,91,45657.45,32819.82,28.12,HiGHS termination: optimal; time limit 300s
