@@ -128,3 +128,16 @@ py src/exposure_robustness.py --residual 0.20 --seconds 300
 ```
 
 Results will be written to `results/zara_exposure_robustness.csv`. Original baseline data, earlier ablation/sensitivity outputs, and the report are left untouched. If HiGHS times out, the script records the termination status without mislabeling the result as a proved optimum. Any new result requires numerical verification before inclusion in the report. The 20% residual level is hypothetical, not calibrated to observed Zara sales.
+
+
+### Completed residual-exposure robustness check (15 November 2026)
+
+**Local command:** `py src/exposure_robustness.py --residual 0.20 --seconds 300`. The CSV `results/zara_exposure_robustness.csv` has been uploaded and its arithmetic independently checked.
+
+- No-exposure factor `eta=0.20`; partial exposure `rho=0.60`; full exposure `1.00`.
+- The reoptimized softened-exposure MILP reported `optimal` termination with objective **EUR 45,657.45** (sales revenue EUR 43,996.00, retention EUR 1,661.45), 392 units shipped and 91 retained; 50/50 full exposure.
+- Fixed baseline shipment allocation evaluated under the softened model: **EUR 45,657.45**.
+- Fixed exposure-ignorant shipment allocation evaluated under the **same** softened model: **EUR 32,819.82**. Under the original zero-residual rule this fixed allocation was worth EUR 30,920.85.
+- Difference vs the softened optimized model: **28.12% lower**, vs 32.28% lower under the original exposure rule.
+- **Scope note:** the exposure-ignorant allocation was *not* reoptimized for the softened sales rule; it is the previously saved no-exposure allocation evaluated under the new common rule. The 20% residual factor is hypothetical, not an estimate of observed retail behavior.
+- The CSV records solver-reported optimal termination but does not include a numerical solver bound or MIP gap.
