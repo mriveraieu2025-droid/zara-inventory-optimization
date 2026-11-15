@@ -109,3 +109,22 @@ The local command `py src/zara_sensitivity_safe.py --only "rho=0.8" --seconds 30
 - Compared with reproduced baseline `rho=0.6` objective EUR 45,657.45, this is **EUR 8.15 higher** (approximately **0.0179%**). It is possible for expected sales units to decline while revenue rises because product prices differ.
 - The older 120-second sensitivity output contained a time-limited feasible incumbent EUR 45,625.90; that is **not** the proven optimum and should be replaced in the principal sensitivity results table.
 - The new output CSV reports `status=optimal` but does not record the solver bound or numeric relative MIP gap. The 300-second rerun must be identified separately from the original 120-second sensitivity experiments. The older `results/zara_sensitivity_detailed.csv` is retained as an archival record, not the authoritative `rho=0.8` result.
+
+
+## Exposure-assumption robustness experiment (new, not yet solved)
+
+The baseline synthetic model assumes **zero** expected current sales if a store/article fails to meet the partial-exposure threshold for every major size. This is deliberately strong. The new script `src/exposure_robustness.py` changes only that assumption:
+
+- No exposure: `e = eta` (proposed `eta=0.20`, meaning 20% of the concave saturation potential).
+- Partial exposure: `e = rho = 0.60`, unchanged.
+- Full exposure: `e = 1.00`, unchanged.
+
+The script verifies that the archived no-exposure-policy and full-MILP allocations reproduce their original **zero-residual** ablation evaluations. It then (a) values both saved shipment allocations under the **same softened exposure rule** and (b) reoptimizes the MILP using a separate set of linear constraints that implement this rule. This avoids comparing objectives from different economic models.
+
+Run after downloading the latest GitHub ZIP, inside the **innermost project folder**:
+
+```powershell
+py src/exposure_robustness.py --residual 0.20 --seconds 300
+```
+
+Results will be written to `results/zara_exposure_robustness.csv`. Original baseline data, earlier ablation/sensitivity outputs, and the report are left untouched. If HiGHS times out, the script records the termination status without mislabeling the result as a proved optimum. Any new result requires numerical verification before inclusion in the report. The 20% residual level is hypothetical, not calibrated to observed Zara sales.
