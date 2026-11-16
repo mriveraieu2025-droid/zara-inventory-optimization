@@ -1,0 +1,4 @@
+policy,objective_eur,sales_revenue_eur,retained_value_eur,units_shipped,expected_sales_units,units_retained,full_exposure,partial_or_full_exposure
+Revised MILP optimal,45657.45000000023,43996.00000000028,1661.449999999952,392,566.1999999999987,91,50,50
+Request-based,22615.67,20602.82,2012.85,392,268.03999999999996,91.0,10,18
+Demand-proportional,38075.47,35911.42,2164.0499999999997,392,471.65999999999997,91.0,28,42
