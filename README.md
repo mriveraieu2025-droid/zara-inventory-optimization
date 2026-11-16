@@ -17,7 +17,7 @@ Saved results passed an independent arithmetic and feasibility audit:
 - All **50** store–article combinations qualify for full exposure.
 - The separate two-store validation problem has an independently proved optimum of **EUR 57.60**.
 
-**Current verification status (16 November 2026):** The baseline model has been rerun locally with solver-reported optimal termination; saved allocations have also passed independent feasibility and objective checks. Additional local solves completed the 40%/20% demand stress tests, rho=0.8 sensitivity rerun, residual-exposure robustness test, and exposure-aware greedy benchmark. The original synthetic-data generator, the archival ablation solve script, and the script/logs that produced the original detailed 120-second sensitivity table are not currently in this repository. Archived results are retained, but their original generation workflow is not yet fully reproducible.
+**Current verification status (16 November 2026):** The baseline model has been rerun locally with solver-reported optimal termination; saved allocations have also passed independent feasibility and objective checks. Additional local solves completed the 40%/20% demand stress tests, rho=0.8 sensitivity rerun, residual-exposure robustness test, and exposure-aware greedy benchmark. The original synthetic-data generator, the original data-generation script and the script/logs that produced the detailed 120-second sensitivity table are not currently in this repository. Archived results are retained, but their original generation workflow is not yet fully reproducible.
 
 ## Current repository layout
 - `data/` — six authoritative synthetic input CSVs.
@@ -25,7 +25,7 @@ Saved results passed an independent arithmetic and feasibility audit:
 - `results/` — archived and freshly reproduced numerical results.
 - `requirements.txt` — recorded Python dependencies.
 
-The report, figures and poster are not yet committed here. The original synthetic-data generator and archival ablation/sensitivity-result producer scripts remain unarchived; the corresponding saved output CSVs are available. The baseline and selected additional experiments have been rerun locally, as documented below.
+The report, figures and poster are not yet committed here. The original synthetic-data generator and historical 120-second sensitivity-result producer remain unarchived. The ablation producer is now restored, with safe rerun outputs; the archived result CSVs are also available. The baseline and selected additional experiments have been rerun locally, as documented below.
 
 ## Citation
 Caro, F., Gallien, J., Díaz, M., García, J., Corredoira, J. M., Montes, M., Ramos, J. A., and Correa, J. (2010). *Zara Uses Operations Research to Reengineer Its Global Distribution Process*. Interfaces, 40(1), 71–84. https://doi.org/10.1287/inte.1090.0472
@@ -47,8 +47,28 @@ Caro, F., Gallien, J., Díaz, M., García, J., Corredoira, J. M., Montes, M., Ra
 - Objective **EUR 45,657.45** = EUR 43,996.00 modeled sales revenue + EUR 1,661.45 assigned retained-inventory value.
 - **392 shipped**, **91 retained**, **566.20 modeled expected sales**, **50/50 full exposure**.
 - Script saved `revised_allocation.csv` and `revised_remaining_stock.csv` on the user's computer. These fresh output files are archived in `results/revised_allocation.csv` and `results/revised_remaining_stock.csv`.
-- Reported solver status is optimal; no raw solver bound/gap shown in the captured terminal output. Selected sensitivity/robustness runs have since been completed, while the original ablation producer and full 120-second sensitivity scripts remain to be recovered or recreated.
+- Reported solver status is optimal; no raw solver bound/gap shown in the captured terminal output. Selected sensitivity/robustness runs have since been completed, while the full historical 120-second sensitivity producer remains to be recovered or recreated; the ablation producer has now been restored.
 
+
+## Reproducing the original ablation experiment
+
+The original ablation experiment script was recovered from the author's local files and adapted for this repository's `src/`, `data/`, and `results/` layout. Its three experimental formulations and fixed-allocation evaluation are retained.
+
+**First, a fast read-only archival check** (does not rerun HiGHS or overwrite outputs):
+
+```powershell
+py src/zara_ablation_experiment.py --check-archive
+```
+
+This validates the original archived shipment policies against the six input CSVs and common full-model evaluation. Expected values are EUR 45,657.45 (full), EUR 30,920.85 (no exposure), and EUR 42,975.55 (linear sales).
+
+**Optional full three-scenario rerun** (each solve can use up to 180 seconds):
+
+```powershell
+py src/zara_ablation_experiment.py --seconds 180
+```
+
+This rerun records solver incumbents/bounds and writes **new files only**: `results/zara_ablation_comparison_rerun.csv` and `results/zara_ablation_shipments_rerun.csv`. The original `results/zara_ablation_comparison.csv`, `results/zara_ablation_shipments.csv`, input data, and baseline allocation remain unchanged. Because MILP allocations need not be unique, a rerun may give different shipment details while matching or nearly matching the archived objective.
 
 ## Re-run the verified baseline from this repository
 
