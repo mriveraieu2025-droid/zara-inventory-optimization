@@ -4,3 +4,4 @@ __pycache__/
 venv/
 .env
 results/zara_sensitivity_results.csv
+generated_data/
