@@ -17,15 +17,15 @@ Saved results passed an independent arithmetic and feasibility audit:
 - All **50** store–article combinations qualify for full exposure.
 - The separate two-store validation problem has an independently proved optimum of **EUR 57.60**.
 
-**Current verification status (16 November 2026):** The baseline model has been rerun locally with solver-reported optimal termination; saved allocations have also passed independent feasibility and objective checks. Additional local solves completed the 40%/20% demand stress tests, rho=0.8 sensitivity rerun, residual-exposure robustness test, and exposure-aware greedy benchmark. The original synthetic-data generator, the original synthetic-data generator and raw solver logs are not currently in this repository; the original detailed sensitivity producer has now been restored. Archived results are retained, but their original generation workflow is not yet fully reproducible.
+**Current verification status (16 November 2026):** The baseline model has been rerun locally with solver-reported optimal termination; saved allocations have also passed independent feasibility and objective checks. Additional local solves completed the 40%/20% demand stress tests, rho=0.8 sensitivity rerun, residual-exposure robustness test, and exposure-aware greedy benchmark. The original synthetic-data generator, the original synthetic-data generator has been recovered and verified; raw historical solver logs are not archived. Archived results are retained, but their original generation workflow is not yet fully reproducible.
 
 ## Current repository layout
-- `data/` — six authoritative synthetic input CSVs.
+- `data/` — six authoritative synthetic input CSVs (exactly reproducible using `src/build_zara_data.py`).
 - `src/` — Pyomo MILP, greedy benchmark, demand and exposure robustness, sensitivity rerun, and independent verification scripts.
 - `results/` — archived and freshly reproduced numerical results.
 - `requirements.txt` — recorded Python dependencies.
 
-The report, figures and poster are not yet committed here. The original synthetic-data generator and raw historical solver logs remain unarchived. The sensitivity and ablation producers are now restored with archive-safe rerun outputs; the archived result CSVs are also available. The baseline and selected additional experiments have been rerun locally, as documented below.
+The report, figures and poster are not yet committed here. The original synthetic-data generator has now been restored and verified byte-for-byte; raw historical solver logs remain unarchived. The sensitivity and ablation producers are now restored with archive-safe rerun outputs; the archived result CSVs are also available. The baseline and selected additional experiments have been rerun locally, as documented below.
 
 ## Citation
 Caro, F., Gallien, J., Díaz, M., García, J., Corredoira, J. M., Montes, M., Ramos, J. A., and Correa, J. (2010). *Zara Uses Operations Research to Reengineer Its Global Distribution Process*. Interfaces, 40(1), 71–84. https://doi.org/10.1287/inte.1090.0472
@@ -116,6 +116,20 @@ py src/zara_sensitivity_detailed_repro.py --seconds 120
 Reruns write **only** `results/zara_sensitivity_detailed_rerun.csv`, never overwrite the original `results/zara_sensitivity_detailed.csv`. Add `--retry` if rerunning an already-recorded scenario.
 
 **Gap-reporting correction:** the recovered original script forcibly set `gap_percent=0` whenever the solver returned `optimal`, although some saved upper bounds were slightly above the incumbent. The restored script preserves the numerical bound-derived gap instead. The zeros in the original detailed CSV are thus a **historical reporting convention/override**, not exact-zero certificates. The `rho=0.8` 300-second rerun remains separately archived and should not be replaced by the earlier 120-second time-limited incumbent.
+
+## Exact synthetic-data regeneration (verified 16 November 2026)
+
+The original synthetic-data generator was recovered as `src/build_zara_data.py`. It uses **`random.Random(20261031)`** and contains the store capacities, article prices, deterministic demand factors, random inventory/demand draws, saturation breakpoint construction, and the baseline exposure settings. A copy of the original script was executed in an isolated temporary directory and **all six generated CSVs matched the committed `data/` files byte-for-byte (Git blob SHA-1 equality)**.
+
+To regenerate the dataset safely from the repository root:
+
+```powershell
+py src/build_zara_data.py
+```
+
+The recovered script has one safety adaptation: it writes into a separate local `generated_data/` folder, **not** the authoritative `data/` folder. This preserves the original experiment inputs and all saved results. `generated_data/` is Git-ignored. Generated record counts are 10 stores, 5 articles, 20 warehouse article-size stocks, 200 store/article/size demand-stock records, 800 saturation segments, and 3 settings.
+
+The original run's totals are **2,356 forecast-demand units**, **279 initial store units**, **483 warehouse units**, and **392 receiving-capacity units**. The generator reproduces the inputs, not Zara's real operating data.
 
 ## Re-run the verified baseline from this repository
 
