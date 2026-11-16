@@ -131,6 +131,30 @@ The recovered script has one safety adaptation: it writes into a separate local 
 
 The original run's totals are **2,356 forecast-demand units**, **279 initial store units**, **483 warehouse units**, and **392 receiving-capacity units**. The generator reproduces the inputs, not Zara's real operating data.
 
+## Request-based and demand-proportional benchmarks (recovered and independently evaluated)
+
+The exact revised benchmark producer was recovered as `src/compare_zara_revised.py`. It generates the two allocation policies and (on full rerun) fixes their shipments in the same Pyomo MILP for common-model evaluation.
+
+**Fast read-only verification, without HiGHS or modified files**:
+
+```powershell
+py src/compare_zara_revised.py --check-only
+```
+
+The policy calculation and independent algebraic common-model evaluation were checked against the authoritative CSVs. Expected:
+- **Request-based**: objective EUR 22,615.67 = sales revenue EUR 20,602.82 + retained value EUR 2,012.85; 392 shipped, 91 retained, 10 full-exposure combinations.
+- **Demand-proportional**: objective EUR 38,075.47 = sales revenue EUR 35,911.42 + retained value EUR 2,164.05; 392 shipped, 91 retained, 28 full-exposure combinations.
+
+**Optional full Pyomo/HiGHS rerun**:
+
+```powershell
+py src/compare_zara_revised.py
+```
+
+The full rerun writes only new files: `results/revised_benchmark_comparison_rerun.csv`, `results/revised_request_based_shipments_rerun.csv`, and `results/revised_demand_proportional_shipments_rerun.csv`. Archived results and input CSVs are not overwritten.
+
+**Version distinction:** A recovered older script (`compare_zara_strategies.py`, not used for reported results) applies a different alphabetical tie-breaking rule for the proportional policy and independently evaluates to EUR 38,206.80. The revised producer breaks tied fulfillment ratios by higher unmet demand and then original store order. The report's EUR 38,075.47 is reproduced by the revised policy. Do not combine the two versions.
+
 ## Re-run the verified baseline from this repository
 
 From the repository root, with Python, Pyomo and HiGHS installed:
