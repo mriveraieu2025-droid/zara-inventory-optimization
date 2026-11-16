@@ -17,17 +17,15 @@ Saved results passed an independent arithmetic and feasibility audit:
 - All **50** store–article combinations qualify for full exposure.
 - The separate two-store validation problem has an independently proved optimum of **EUR 57.60**.
 
-**Important: still pending.** The final Pyomo/HiGHS solver must be rerun locally; historical solver optimality labels have not been independently recertified. The exact original synthetic data-generation script and raw solver logs are still to be confirmed. The model settings CSV was reconstructed from the report, so compare it with the original local file.
+**Current verification status (16 November 2026):** The baseline model has been rerun locally with solver-reported optimal termination; saved allocations have also passed independent feasibility and objective checks. Additional local solves completed the 40%/20% demand stress tests, rho=0.8 sensitivity rerun, residual-exposure robustness test, and exposure-aware greedy benchmark. The original synthetic-data generator, the archival ablation solve script, and the script/logs that produced the original detailed 120-second sensitivity table are not currently in this repository. Archived results are retained, but their original generation workflow is not yet fully reproducible.
 
-## Planned layout
-- `data/` — six input CSVs and data provenance.
-- `src/` — model, benchmark, sensitivity, ablation and verification code.
-- `results/` — saved solutions and audited summary files.
-- `figures/` — plots generated from solutions.
-- `report/` — technical report.
-- `poster/` — final academic poster.
+## Current repository layout
+- `data/` — six authoritative synthetic input CSVs.
+- `src/` — Pyomo MILP, greedy benchmark, demand and exposure robustness, sensitivity rerun, and independent verification scripts.
+- `results/` — archived and freshly reproduced numerical results.
+- `requirements.txt` — recorded Python dependencies.
 
-Reproduction instructions, exact software versions and full experiments will be added as files are checked and uploaded. Do not treat the reported numerical values as results from a newly rerun solver.
+The report, figures and poster are not yet committed here. The original synthetic-data generator and archival ablation/sensitivity-result producer scripts remain unarchived; the corresponding saved output CSVs are available. The baseline and selected additional experiments have been rerun locally, as documented below.
 
 ## Citation
 Caro, F., Gallien, J., Díaz, M., García, J., Corredoira, J. M., Montes, M., Ramos, J. A., and Correa, J. (2010). *Zara Uses Operations Research to Reengineer Its Global Distribution Process*. Interfaces, 40(1), 71–84. https://doi.org/10.1287/inte.1090.0472
@@ -40,7 +38,7 @@ Caro, F., Gallien, J., Díaz, M., García, J., Corredoira, J. M., Montes, M., Ra
 - Saved result: `results/baseline_reproduction_2026-11-15.csv`.
 - Objective: **EUR 45,657.45**, expected sales revenue **EUR 43,996.00**, retained-inventory value **EUR 1,661.45**, 392 units shipped, 91 retained, and 50/50 full exposure.
 - The CSV records **`status=optimal`** but does **not include a solver bound or MIP-gap column**. Do not claim an independently verified exactly-zero gap from this output alone.
-- Note: the fresh local run verifies the baseline solve, but does not yet rerun all sensitivity, benchmark, and ablation experiments.
+- Note: this run verifies the baseline solve. Later local runs additionally verified demand-stress scenarios, rho=0.8 sensitivity, residual-exposure robustness and the exposure-aware greedy benchmark; historical ablation and other detailed sensitivity scenarios have not all been freshly rerun.
 
 
 ### Main-model reproduction (15 November 2026)
@@ -49,7 +47,7 @@ Caro, F., Gallien, J., Díaz, M., García, J., Corredoira, J. M., Montes, M., Ra
 - Objective **EUR 45,657.45** = EUR 43,996.00 modeled sales revenue + EUR 1,661.45 assigned retained-inventory value.
 - **392 shipped**, **91 retained**, **566.20 modeled expected sales**, **50/50 full exposure**.
 - Script saved `revised_allocation.csv` and `revised_remaining_stock.csv` on the user's computer. These fresh output files are archived in `results/revised_allocation.csv` and `results/revised_remaining_stock.csv`.
-- Reported solver status is optimal; no raw solver bound/gap shown in the captured terminal output. Separate sensitivity and ablation experiment reruns are pending.
+- Reported solver status is optimal; no raw solver bound/gap shown in the captured terminal output. Selected sensitivity/robustness runs have since been completed, while the original ablation producer and full 120-second sensitivity scripts remain to be recovered or recreated.
 
 
 ## Re-run the verified baseline from this repository
@@ -111,7 +109,7 @@ The local command `py src/zara_sensitivity_safe.py --only "rho=0.8" --seconds 30
 - The new output CSV reports `status=optimal` but does not record the solver bound or numeric relative MIP gap. The 300-second rerun must be identified separately from the original 120-second sensitivity experiments. The older `results/zara_sensitivity_detailed.csv` is retained as an archival record, not the authoritative `rho=0.8` result.
 
 
-## Exposure-assumption robustness experiment (new, not yet solved)
+## Exposure-assumption robustness experiment (completed; reproduction instructions)
 
 The baseline synthetic model assumes **zero** expected current sales if a store/article fails to meet the partial-exposure threshold for every major size. This is deliberately strong. The new script `src/exposure_robustness.py` changes only that assumption:
 
