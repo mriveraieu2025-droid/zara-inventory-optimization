@@ -17,7 +17,7 @@ Saved results passed an independent arithmetic and feasibility audit:
 - All **50** store–article combinations qualify for full exposure.
 - The separate two-store validation problem has an independently proved optimum of **EUR 57.60**.
 
-**Current verification status (16 November 2026):** The baseline model has been rerun locally with solver-reported optimal termination; saved allocations have also passed independent feasibility and objective checks. Additional local solves completed the 40%/20% demand stress tests, rho=0.8 sensitivity rerun, residual-exposure robustness test, and exposure-aware greedy benchmark. The original synthetic-data generator, the original data-generation script and the script/logs that produced the detailed 120-second sensitivity table are not currently in this repository. Archived results are retained, but their original generation workflow is not yet fully reproducible.
+**Current verification status (16 November 2026):** The baseline model has been rerun locally with solver-reported optimal termination; saved allocations have also passed independent feasibility and objective checks. Additional local solves completed the 40%/20% demand stress tests, rho=0.8 sensitivity rerun, residual-exposure robustness test, and exposure-aware greedy benchmark. The original synthetic-data generator, the original synthetic-data generator and raw solver logs are not currently in this repository; the original detailed sensitivity producer has now been restored. Archived results are retained, but their original generation workflow is not yet fully reproducible.
 
 ## Current repository layout
 - `data/` — six authoritative synthetic input CSVs.
@@ -25,7 +25,7 @@ Saved results passed an independent arithmetic and feasibility audit:
 - `results/` — archived and freshly reproduced numerical results.
 - `requirements.txt` — recorded Python dependencies.
 
-The report, figures and poster are not yet committed here. The original synthetic-data generator and historical 120-second sensitivity-result producer remain unarchived. The ablation producer is now restored, with safe rerun outputs; the archived result CSVs are also available. The baseline and selected additional experiments have been rerun locally, as documented below.
+The report, figures and poster are not yet committed here. The original synthetic-data generator and raw historical solver logs remain unarchived. The sensitivity and ablation producers are now restored with archive-safe rerun outputs; the archived result CSVs are also available. The baseline and selected additional experiments have been rerun locally, as documented below.
 
 ## Citation
 Caro, F., Gallien, J., Díaz, M., García, J., Corredoira, J. M., Montes, M., Ramos, J. A., and Correa, J. (2010). *Zara Uses Operations Research to Reengineer Its Global Distribution Process*. Interfaces, 40(1), 71–84. https://doi.org/10.1287/inte.1090.0472
@@ -47,7 +47,7 @@ Caro, F., Gallien, J., Díaz, M., García, J., Corredoira, J. M., Montes, M., Ra
 - Objective **EUR 45,657.45** = EUR 43,996.00 modeled sales revenue + EUR 1,661.45 assigned retained-inventory value.
 - **392 shipped**, **91 retained**, **566.20 modeled expected sales**, **50/50 full exposure**.
 - Script saved `revised_allocation.csv` and `revised_remaining_stock.csv` on the user's computer. These fresh output files are archived in `results/revised_allocation.csv` and `results/revised_remaining_stock.csv`.
-- Reported solver status is optimal; no raw solver bound/gap shown in the captured terminal output. Selected sensitivity/robustness runs have since been completed, while the full historical 120-second sensitivity producer remains to be recovered or recreated; the ablation producer has now been restored.
+- Reported solver status is optimal; no raw solver bound/gap shown in the captured terminal output. Selected sensitivity/robustness runs have since been completed, while the historical 120-second sensitivity producer and ablation producer have both been restored, with archived outputs kept separately.
 
 
 ## Reproducing the original ablation experiment
@@ -84,6 +84,34 @@ Independent checks confirmed that every one of the 200 shipment decisions per po
 - Linear sales: **EUR 42,975.55** (50 full)
 
 All three policies ship 392 units and retain 91. Original archived files were **not overwritten**. Solver-reported relative gaps in the rerun summary: approximately 0.010%, 0.000%, and 0.010% for full, no-exposure, and linear-sales variants, respectively. These are numerical tolerance certificates rather than mathematical proofs of exact zero gap.
+
+## Detailed sensitivity experiment: original producer recovered
+
+The original eleven-scenario sensitivity script was recovered as `src/zara_sensitivity_detailed_repro.py`. It preserves all eleven original scenario definitions and the direct APPSI-HiGHS incumbent/upper-bound reporting, adapted to the `src/`, `data/`, `results/` repository structure.
+
+**Read-only verification of original 120-second CSV (fast, no solver):**
+
+```powershell
+py src/zara_sensitivity_detailed_repro.py --check-archive
+```
+
+Expected: all 11 archived rows and objective decompositions pass; **7 original optimal** and **4 original feasible-time-limit** statuses. The separately rerun rho=0.8 scenario then replaces one old time-limited result in the report, producing 8 optimal and 3 time-limited reported scenarios.
+
+**Selected fresh solve** (optional):
+
+```powershell
+py src/zara_sensitivity_detailed_repro.py --only "threshold=4" --seconds 120
+```
+
+**Full eleven-scenario rerun** (optional; can be lengthy):
+
+```powershell
+py src/zara_sensitivity_detailed_repro.py --seconds 120
+```
+
+Reruns write **only** `results/zara_sensitivity_detailed_rerun.csv`, never overwrite the original `results/zara_sensitivity_detailed.csv`. Add `--retry` if rerunning an already-recorded scenario.
+
+**Gap-reporting correction:** the recovered original script forcibly set `gap_percent=0` whenever the solver returned `optimal`, although some saved upper bounds were slightly above the incumbent. The restored script preserves the numerical bound-derived gap instead. The zeros in the original detailed CSV are thus a **historical reporting convention/override**, not exact-zero certificates. The `rho=0.8` 300-second rerun remains separately archived and should not be replaced by the earlier 120-second time-limited incumbent.
 
 ## Re-run the verified baseline from this repository
 
