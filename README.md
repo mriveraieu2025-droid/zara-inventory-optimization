@@ -147,6 +147,8 @@ The policy calculation and independent algebraic common-model evaluation were ch
 
 **Read-only benchmark verification completed (16 November 2026):** Running `py src/compare_zara_revised.py --check-only` passed both recovered allocation policies, including objectives EUR 22,615.67 and EUR 38,075.47, full-exposure counts 10 and 28, and 392 shipped units for each. This verifies independent fixed-allocation evaluation, not yet a fresh HiGHS rerun of the benchmark solve workflow.
 
+**Full benchmark solver rerun verified locally (16 November 2026):** `py src/compare_zara_revised.py` returned solver-reported `optimal` termination for the full MILP and both fixed-allocation evaluations. Terminal results matched the report: full MILP EUR 45,657.45 (sales EUR 43,996.00; retention EUR 1,661.45), request-based EUR 22,615.67 (sales EUR 20,602.82; retention EUR 2,012.85), and demand-proportional EUR 38,075.47 (sales EUR 35,911.42; retention EUR 2,164.05). All three ship 392 units, with full-exposure counts 50, 10, and 28, respectively. Improvement percentages are 101.88% and 19.91%. The newly generated rerun CSVs are pending upload and independent file checks.
+
 **Optional full Pyomo/HiGHS rerun**:
 
 ```powershell
