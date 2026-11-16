@@ -70,6 +70,21 @@ py src/zara_ablation_experiment.py --seconds 180
 
 This rerun records solver incumbents/bounds and writes **new files only**: `results/zara_ablation_comparison_rerun.csv` and `results/zara_ablation_shipments_rerun.csv`. The original `results/zara_ablation_comparison.csv`, `results/zara_ablation_shipments.csv`, input data, and baseline allocation remain unchanged. Because MILP allocations need not be unique, a rerun may give different shipment details while matching or nearly matching the archived objective.
 
+### Verified ablation rerun (16 November 2026)
+
+The original ablation experiment was rerun locally with `py src/zara_ablation_experiment.py --seconds 180`. All three HiGHS models returned solver-reported optimal termination within the configured **0.01% relative MIP-gap tolerance**.
+
+New outputs are archived separately as:
+- `results/zara_ablation_comparison_rerun.csv`
+- `results/zara_ablation_shipments_rerun.csv`
+
+Independent checks confirmed that every one of the 200 shipment decisions per policy exactly matches the original archived shipment CSV. Re-evaluation under the common full-model rules gives:
+- Full MILP: **EUR 45,657.45** (50 full exposure)
+- No exposure: **EUR 30,920.85** (17 full, 14 partial, 19 none)
+- Linear sales: **EUR 42,975.55** (50 full)
+
+All three policies ship 392 units and retain 91. Original archived files were **not overwritten**. Solver-reported relative gaps in the rerun summary: approximately 0.010%, 0.000%, and 0.010% for full, no-exposure, and linear-sales variants, respectively. These are numerical tolerance certificates rather than mathematical proofs of exact zero gap.
+
 ## Re-run the verified baseline from this repository
 
 From the repository root, with Python, Pyomo and HiGHS installed:
