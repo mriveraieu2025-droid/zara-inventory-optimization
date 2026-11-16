@@ -87,6 +87,10 @@ All three policies ship 392 units and retain 91. Original archived files were **
 
 ## Detailed sensitivity experiment: original producer recovered
 
+**Read-only archive verification completed (16 November 2026):** Running `py src/zara_sensitivity_detailed_repro.py --check-archive` passed all 11 historical scenario records, including feasible objective = sales revenue + retention for every scenario. Archived statuses are 7 `optimal` and 4 `feasible_time_limit`; the separate rho=0.8 rerun gives the report's updated tally of 8 optimal and 3 time-limited scenarios. This checks saved data but is **not** a fresh solver run of all eleven scenarios. The original CSV's `0.000%` entries for optimal status were forced by the historical script and should not be interpreted as measured zero gaps.
+
+
+
 The original eleven-scenario sensitivity script was recovered as `src/zara_sensitivity_detailed_repro.py`. It preserves all eleven original scenario definitions and the direct APPSI-HiGHS incumbent/upper-bound reporting, adapted to the `src/`, `data/`, `results/` repository structure.
 
 **Read-only verification of original 120-second CSV (fast, no solver):**
