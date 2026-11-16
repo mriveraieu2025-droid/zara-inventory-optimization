@@ -145,6 +145,8 @@ The policy calculation and independent algebraic common-model evaluation were ch
 - **Request-based**: objective EUR 22,615.67 = sales revenue EUR 20,602.82 + retained value EUR 2,012.85; 392 shipped, 91 retained, 10 full-exposure combinations.
 - **Demand-proportional**: objective EUR 38,075.47 = sales revenue EUR 35,911.42 + retained value EUR 2,164.05; 392 shipped, 91 retained, 28 full-exposure combinations.
 
+**Read-only benchmark verification completed (16 November 2026):** Running `py src/compare_zara_revised.py --check-only` passed both recovered allocation policies, including objectives EUR 22,615.67 and EUR 38,075.47, full-exposure counts 10 and 28, and 392 shipped units for each. This verifies independent fixed-allocation evaluation, not yet a fresh HiGHS rerun of the benchmark solve workflow.
+
 **Optional full Pyomo/HiGHS rerun**:
 
 ```powershell
