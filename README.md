@@ -120,6 +120,30 @@ py src/zara_sensitivity_safe.py --only Baseline --seconds 180
 
 Its recorded result is `results/baseline_reproduction_2026-11-15.csv`. That file reports solver-optimal termination and the baseline objective, but **does not export the numerical best bound or MIP gap**.
 
+
+### Two-store analytical validation
+
+The report includes a two-store, one-article
+validation example with a mathematically
+proven global optimum of EUR 57.60.
+
+Reproduce the computational validation with:
+
+```powershell
+py src/validate_two_store.py
+```
+
+The script solves the small MILP using
+Pyomo and HiGHS and checks that the solver
+reproduces the analytical optimum of
+EUR 57.60, with 5.76 expected sales units,
+six warehouse units shipped, and none retained.
+
+This validates the small example independently
+of the full 10-store model. It does not establish
+exact global optimality of the full model.
+
+
 ### Exact regeneration of the synthetic inputs
 
 ```powershell
