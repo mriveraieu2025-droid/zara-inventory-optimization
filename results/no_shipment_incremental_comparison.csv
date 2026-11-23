@@ -1,0 +1,5 @@
+policy,objective_eur,no_shipment_baseline_eur,incremental_value_eur
+MILP,45657.45,16218.39,29439.06
+Exposure-aware greedy,45507.60,16218.39,29289.21
+Demand-proportional,38075.47,16218.39,21857.08
+Request-based,22615.67,16218.39,6397.28
