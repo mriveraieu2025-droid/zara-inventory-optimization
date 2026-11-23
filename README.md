@@ -1,294 +1,321 @@
 # Zara Inventory Optimization — Optimization I Final Project
 
-A synthetic, single-period inventory-allocation study inspired by Caro et al. (2010), *Zara Uses Operations Research to Reengineer Its Global Distribution Process*.
+**A synthetic, single-period inventory-allocation study inspired by Caro et al. (2010).**
 
-## Project at a glance
-- **Method:** Mixed-Integer Linear Programming (MILP) using Python/Pyomo and HiGHS.
-- **Network:** one warehouse, ten stores, five articles, four sizes, one replenishment period.
-- **Decision:** integer shipments by store/article/size and retained warehouse quantities.
-- **Sales model:** size-exposure thresholds plus concave piecewise-linear saturation.
-- **Objective:** modeled expected current sales revenue **plus assigned retained-inventory value**; **not net profit**.
-- **Data:** synthetic, not actual Zara records.
+This project uses mixed-integer linear programming (MILP) to determine how a warehouse should distribute clothing across stores and sizes. It incorporates **size exposure**, **diminishing marginal sales potential (saturation)**, **store receiving capacities**, and the **economic value of inventory retained at the warehouse**.
 
-## Step 1: numerical verification status
-Saved results passed an independent arithmetic and feasibility audit:
-- **EUR 45,657.45** total modeled value = **EUR 43,996.00** sales revenue + **EUR 1,661.45** retained-stock value.
-- **483 warehouse units = 392 shipped + 91 retained**.
-- All **50** store–article combinations qualify for full exposure.
-- The separate two-store validation problem has an independently proved optimum of **EUR 57.60**.
+> **Scope:** All numerical inputs are synthetic. This is an academic model, not an implementation of Zara's operational system. The objective is *modeled economic value* (expected sales revenue plus assigned retained-stock value), **not net profit** or a prediction of actual Zara sales.
 
-**Current verification status (16 November 2026):** The baseline model has been rerun locally with solver-reported optimal termination; saved allocations have also passed independent feasibility and objective checks. Additional local solves completed the 40%/20% demand stress tests, rho=0.8 sensitivity rerun, residual-exposure robustness test, and exposure-aware greedy benchmark. The original synthetic-data generator, the original synthetic-data generator has been recovered and verified; raw historical solver logs are not archived. Archived results are retained, but their original generation workflow is not yet fully reproducible.
+## 1. Project at a glance
 
-## Current repository layout
-- `data/` — six authoritative synthetic input CSVs (exactly reproducible using `src/build_zara_data.py`).
-- `src/` — Pyomo MILP, greedy benchmark, demand and exposure robustness, sensitivity rerun, and independent verification scripts.
-- `results/` — archived and freshly reproduced numerical results.
-- `requirements.txt` — recorded Python dependencies.
+| Component | Description |
+|---|---|
+| Network | 1 warehouse, 10 hypothetical European stores |
+| Products | 5 clothing articles, each in XS, S, M and L |
+| Periods | 1 replenishment period |
+| Method | Pyomo MILP solved with HiGHS |
+| Decisions | Integer shipments, warehouse stock retained, modeled expected sales, binary exposure indicators |
+| Sales assumptions | Three exposure levels combined with concave piecewise-linear saturation |
+| Operational limits | Warehouse stock by article/size and each store's receiving capacity |
+| Data | Reproducibly generated synthetic CSVs; random seed `20261031` |
 
-The report, figures and poster are not yet committed here. The original synthetic-data generator has now been restored and verified byte-for-byte; raw historical solver logs remain unarchived. The sensitivity and ablation producers are now restored with archive-safe rerun outputs; the archived result CSVs are also available. The baseline and selected additional experiments have been rerun locally, as documented below.
+In the baseline model, sizes **S, M and L** determine whether a store–article assortment qualifies for partial or full exposure. The resulting sales factor applies to **all four sizes**, including XS. The partial-exposure factor is `rho = 0.60`, and full exposure requires at least three units of each major size. Warehouse stock retained after allocation receives a hypothetical value equal to `0.35 ×` the article's selling price per unit.
 
-## Citation
-Caro, F., Gallien, J., Díaz, M., García, J., Corredoira, J. M., Montes, M., Ramos, J. A., and Correa, J. (2010). *Zara Uses Operations Research to Reengineer Its Global Distribution Process*. Interfaces, 40(1), 71–84. https://doi.org/10.1287/inte.1090.0472
+The baseline formulation contains **520 decision variables** (200 integer shipments, 200 continuous expected-sales variables, 20 integer warehouse-retention variables and 100 binary exposure indicators) and **2,580 linear constraints**.
 
+## 2. Main verified findings
 
-### Fresh local baseline solver run (15 November 2026)
-- Executed on Windows using **Pyomo 6.10.1**, **highspy 1.15.1**.
-- Command: `py src/zara_sensitivity_safe.py --only Baseline --seconds 180`.
-- Console reported six CSV inputs loaded, saturation/big-M checks passed, and one scenario with **optimal** termination.
-- Saved result: `results/baseline_reproduction_2026-11-15.csv`.
-- Objective: **EUR 45,657.45**, expected sales revenue **EUR 43,996.00**, retained-inventory value **EUR 1,661.45**, 392 units shipped, 91 retained, and 50/50 full exposure.
-- The CSV records **`status=optimal`** but does **not include a solver bound or MIP-gap column**. Do not claim an independently verified exactly-zero gap from this output alone.
-- Note: this run verifies the baseline solve. Later local runs additionally verified demand-stress scenarios, rho=0.8 sensitivity, residual-exposure robustness and the exposure-aware greedy benchmark; historical ablation and other detailed sensitivity scenarios have not all been freshly rerun.
+**Verification status: 23 November 2026.** The project has been rerun locally, and saved allocations and numerical outputs have been checked for consistency. Historical outputs and later reruns are kept separately.
 
+| Baseline result | Value |
+|---|---:|
+| Total modeled economic objective | **EUR 45,657.45** |
+| Modeled expected sales revenue | EUR 43,996.00 |
+| Assigned value of retained warehouse inventory | EUR 1,661.45 |
+| Warehouse stock available | 483 units |
+| Warehouse stock shipped | **392 units** |
+| Warehouse stock retained | **91 units** |
+| Modeled expected sales | 566.20 units |
+| Store–article combinations with full exposure | 50 of 50 |
 
-### Main-model reproduction (15 November 2026)
-- On Windows, ran `py solve_zara_final.py` with Pyomo 6.10.1 and highspy 1.15.1.
-- Console: all six CSVs loaded; saturation/big-M checks passed; **Solver termination: optimal**; **ALL SOLUTION CHECKS PASSED!**
-- Objective **EUR 45,657.45** = EUR 43,996.00 modeled sales revenue + EUR 1,661.45 assigned retained-inventory value.
-- **392 shipped**, **91 retained**, **566.20 modeled expected sales**, **50/50 full exposure**.
-- Script saved `revised_allocation.csv` and `revised_remaining_stock.csv` on the user's computer. These fresh output files are archived in `results/revised_allocation.csv` and `results/revised_remaining_stock.csv`.
-- Reported solver status is optimal; no raw solver bound/gap shown in the captured terminal output. Selected sensitivity/robustness runs have since been completed, while the historical 120-second sensitivity producer and ablation producer have both been restored, with archived outputs kept separately.
+**Main operational finding:** All ten stores reach their receiving capacities even though 91 warehouse units remain unshipped. Receiving capacity is therefore a binding operational bottleneck in this synthetic instance. Exposure, saturation and retained-stock value help determine *which* stores, articles and sizes receive the available shipments.
 
+The baseline solve reported **optimal termination within its configured numerical MIP-gap tolerance**. The archived baseline output does not contain a raw best bound or measured final MIP-gap value, so an exactly-zero gap is **not** claimed.
 
-## Reproducing the original ablation experiment
+### No-shipment baseline and incremental value
 
-The original ablation experiment script was recovered from the author's local files and adapted for this repository's `src/`, `data/`, and `results/` layout. Its three experimental formulations and fixed-allocation evaluation are retained.
+Shipping nothing is a valid reference policy: existing store inventory can still generate modeled sales, and all warehouse units retain their assigned value.
 
-**First, a fast read-only archival check** (does not rerun HiGHS or overwrite outputs):
+- Modeled sales revenue from initial store inventory: **EUR 3,566.94**.
+- Value of all warehouse inventory retained: **EUR 12,651.45**.
+- **No-shipment objective: EUR 16,218.39**.
 
-```powershell
-py src/zara_ablation_experiment.py --check-archive
+The incremental modeled value of policy `m` is `Delta Z_m = Z_m - Z_no_shipment`.
+
+| Allocation policy | Total objective (EUR) | Increment over no shipment (EUR) |
+|---|---:|---:|
+| **Full MILP** | **45,657.45** | **29,439.06** |
+| Exposure-aware greedy | 45,507.60 | 29,289.21 |
+| Demand-proportional | 38,075.47 | 21,857.08 |
+| Request-based | 22,615.67 | 6,397.28 |
+
+On **incremental value**, the MILP improves upon the request-based, demand-proportional and exposure-aware greedy policies by **360.18%**, **34.69%** and **0.51%**, respectively. The corresponding comparisons of *total* objectives are different (approximately **101.88%**, **19.91%** and **0.33%**). The report prioritizes incremental comparisons because all total objectives include value present without replenishment.
+
+All four policies ship 392 units; their performance differences result from the **composition of shipments**, not the number of units shipped. The greedy comparator is explicitly exposure-aware and performs nearly as well as the MILP on this one synthetic dataset.
+
+## 3. Repository structure
+
+```text
+zara-inventory-optimization/
+├── data/                         # Six authoritative synthetic input CSVs
+├── src/                          # Model and experiment scripts
+│   ├── build_zara_data.py
+│   ├── solve_zara_final.py
+│   ├── verify_saved_results.py
+│   ├── compare_zara_revised.py
+│   ├── exposure_aware_greedy.py
+│   ├── zara_ablation_experiment.py
+│   ├── zara_sensitivity_detailed_repro.py
+│   ├── zara_sensitivity_safe.py
+│   ├── demand_stress_test.py
+│   ├── exposure_robustness.py
+│   └── plot_threshold_sensitivity.py
+├── results/                      # Archived and independently reproduced outputs
+│   └── figures/
+│       ├── threshold_sensitivity_updated.png
+│       └── threshold_sensitivity_updated.pdf
+├── zara_no_shipment_incremental.py
+├── requirements.txt
+└── README.md
 ```
 
-This validates the original archived shipment policies against the six input CSVs and common full-model evaluation. Expected values are EUR 45,657.45 (full), EUR 30,920.85 (no exposure), and EUR 42,975.55 (linear sales).
+The six original input files are `stores.csv`, `articles.csv`, `warehouse.csv`, `store_article_size.csv`, `saturation_segments.csv` and `model_settings.csv`. Together, they provide 10 stores, 5 articles, 20 warehouse article–size records, 200 store–article–size records and 800 saturation segment records.
 
-**Optional full three-scenario rerun** (each solve can use up to 180 seconds):
+The updated threshold-sensitivity figure is available in **PNG and PDF** under `results/figures/`, with its generating code in `src/plot_threshold_sensitivity.py`. The final report and poster are not included in this repository at the time of this README revision.
 
-```powershell
-py src/zara_ablation_experiment.py --seconds 180
-```
+## 4. Installation and baseline verification
 
-This rerun records solver incumbents/bounds and writes **new files only**: `results/zara_ablation_comparison_rerun.csv` and `results/zara_ablation_shipments_rerun.csv`. The original `results/zara_ablation_comparison.csv`, `results/zara_ablation_shipments.csv`, input data, and baseline allocation remain unchanged. Because MILP allocations need not be unique, a rerun may give different shipment details while matching or nearly matching the archived objective.
-
-### Verified ablation rerun (16 November 2026)
-
-The original ablation experiment was rerun locally with `py src/zara_ablation_experiment.py --seconds 180`. All three HiGHS models returned solver-reported optimal termination within the configured **0.01% relative MIP-gap tolerance**.
-
-New outputs are archived separately as:
-- `results/zara_ablation_comparison_rerun.csv`
-- `results/zara_ablation_shipments_rerun.csv`
-
-Independent checks confirmed that every one of the 200 shipment decisions per policy exactly matches the original archived shipment CSV. Re-evaluation under the common full-model rules gives:
-- Full MILP: **EUR 45,657.45** (50 full exposure)
-- No exposure: **EUR 30,920.85** (17 full, 14 partial, 19 none)
-- Linear sales: **EUR 42,975.55** (50 full)
-
-All three policies ship 392 units and retain 91. Original archived files were **not overwritten**. Solver-reported relative gaps in the rerun summary: approximately 0.010%, 0.000%, and 0.010% for full, no-exposure, and linear-sales variants, respectively. These are numerical tolerance certificates rather than mathematical proofs of exact zero gap.
-
-## Detailed sensitivity experiment: original producer recovered
-
-**Read-only archive verification completed (16 November 2026):** Running `py src/zara_sensitivity_detailed_repro.py --check-archive` passed all 11 historical scenario records, including feasible objective = sales revenue + retention for every scenario. Archived statuses are 7 `optimal` and 4 `feasible_time_limit`; the separate rho=0.8 rerun gives the report's updated tally of 8 optimal and 3 time-limited scenarios. This checks saved data but is **not** a fresh solver run of all eleven scenarios. The original CSV's `0.000%` entries for optimal status were forced by the historical script and should not be interpreted as measured zero gaps.
-
-
-
-The original eleven-scenario sensitivity script was recovered as `src/zara_sensitivity_detailed_repro.py`. It preserves all eleven original scenario definitions and the direct APPSI-HiGHS incumbent/upper-bound reporting, adapted to the `src/`, `data/`, `results/` repository structure.
-
-**Read-only verification of original 120-second CSV (fast, no solver):**
+Use Python from the project root. The commands below use the Windows Python launcher (`py`); on other systems, substitute `python` where appropriate.
 
 ```powershell
-py src/zara_sensitivity_detailed_repro.py --check-archive
+py -m pip install -r requirements.txt
+py src/verify_saved_results.py
 ```
 
-Expected: all 11 archived rows and objective decompositions pass; **7 original optimal** and **4 original feasible-time-limit** statuses. The separately rerun rho=0.8 scenario then replaces one old time-limited result in the report, producing 8 optimal and 3 time-limited reported scenarios.
+`requirements.txt` pins **Pyomo 6.10.1** and **highspy 1.15.1**, the packages used in the documented Windows reproductions. `verify_saved_results.py` performs read-only checks of stored data and results.
 
-**Selected fresh solve** (optional):
+To re-solve the baseline MILP:
 
 ```powershell
-py src/zara_sensitivity_detailed_repro.py --only "threshold=4" --seconds 120
+py src/solve_zara_final.py
 ```
 
-**Full eleven-scenario rerun** (optional; can be lengthy):
+This script reads the six input files from `data/`, solves with HiGHS, checks the resulting allocation and writes `results/revised_allocation.csv` and `results/revised_remaining_stock.csv`. **Back up these two files before rerunning** if you wish to preserve the exact previously committed allocation; the solver can return another equally good allocation.
+
+The baseline was also reproduced on **15 November 2026** using:
 
 ```powershell
-py src/zara_sensitivity_detailed_repro.py --seconds 120
+py src/zara_sensitivity_safe.py --only Baseline --seconds 180
 ```
 
-Reruns write **only** `results/zara_sensitivity_detailed_rerun.csv`, never overwrite the original `results/zara_sensitivity_detailed.csv`. Add `--retry` if rerunning an already-recorded scenario.
+Its recorded result is `results/baseline_reproduction_2026-11-15.csv`. That file reports solver-optimal termination and the baseline objective, but **does not export the numerical best bound or MIP gap**.
 
-**Gap-reporting correction:** the recovered original script forcibly set `gap_percent=0` whenever the solver returned `optimal`, although some saved upper bounds were slightly above the incumbent. The restored script preserves the numerical bound-derived gap instead. The zeros in the original detailed CSV are thus a **historical reporting convention/override**, not exact-zero certificates. The `rho=0.8` 300-second rerun remains separately archived and should not be replaced by the earlier 120-second time-limited incumbent.
-
-## Exact synthetic-data regeneration (verified 16 November 2026)
-
-The original synthetic-data generator was recovered as `src/build_zara_data.py`. It uses **`random.Random(20261031)`** and contains the store capacities, article prices, deterministic demand factors, random inventory/demand draws, saturation breakpoint construction, and the baseline exposure settings. A copy of the original script was executed in an isolated temporary directory and **all six generated CSVs matched the committed `data/` files byte-for-byte (Git blob SHA-1 equality)**.
-
-To regenerate the dataset safely from the repository root:
+### Exact regeneration of the synthetic inputs
 
 ```powershell
 py src/build_zara_data.py
 ```
 
-The recovered script has one safety adaptation: it writes into a separate local `generated_data/` folder, **not** the authoritative `data/` folder. This preserves the original experiment inputs and all saved results. `generated_data/` is Git-ignored. Generated record counts are 10 stores, 5 articles, 20 warehouse article-size stocks, 200 store/article/size demand-stock records, 800 saturation segments, and 3 settings.
+The generator uses `random.Random(20261031)` and writes regenerated files into the separate, Git-ignored `generated_data/` directory, **not** over the authoritative `data/` files. Independent regeneration confirmed that all six CSVs matched the committed inputs byte-for-byte. The underlying totals are **2,356 forecast-demand units**, **279 initial store inventory units**, **483 warehouse units**, and **392 units of store receiving capacity**.
 
-The original run's totals are **2,356 forecast-demand units**, **279 initial store units**, **483 warehouse units**, and **392 receiving-capacity units**. The generator reproduces the inputs, not Zara's real operating data.
+## 5. Reproducing the benchmark comparisons
 
-## Request-based and demand-proportional benchmarks (recovered and independently evaluated)
+The request-based and demand-proportional policies are implemented in `src/compare_zara_revised.py`. The demand-proportional implementation allocates article–size units iteratively to the eligible store with the smallest fulfilled fraction of initial unmet demand; ties favor larger unmet demand and then fixed store order. Neither simple benchmark chooses shipments using exposure, saturation or retained-inventory value.
 
-The exact revised benchmark producer was recovered as `src/compare_zara_revised.py`. It generates the two allocation policies and (on full rerun) fixes their shipments in the same Pyomo MILP for common-model evaluation.
-
-**Fast read-only verification, without HiGHS or modified files**:
+A fast, **read-only** check of the existing policy shipments and evaluations:
 
 ```powershell
 py src/compare_zara_revised.py --check-only
 ```
 
-The policy calculation and independent algebraic common-model evaluation were checked against the authoritative CSVs. Expected:
-- **Request-based**: objective EUR 22,615.67 = sales revenue EUR 20,602.82 + retained value EUR 2,012.85; 392 shipped, 91 retained, 10 full-exposure combinations.
-- **Demand-proportional**: objective EUR 38,075.47 = sales revenue EUR 35,911.42 + retained value EUR 2,164.05; 392 shipped, 91 retained, 28 full-exposure combinations.
-
-**Read-only benchmark verification completed (16 November 2026):** Running `py src/compare_zara_revised.py --check-only` passed both recovered allocation policies, including objectives EUR 22,615.67 and EUR 38,075.47, full-exposure counts 10 and 28, and 392 shipped units for each. This verifies independent fixed-allocation evaluation, not yet a fresh HiGHS rerun of the benchmark solve workflow.
-
-**Full benchmark solver rerun verified locally (16 November 2026):** `py src/compare_zara_revised.py` returned solver-reported `optimal` termination for the full MILP and both fixed-allocation evaluations. Terminal results matched the report: full MILP EUR 45,657.45 (sales EUR 43,996.00; retention EUR 1,661.45), request-based EUR 22,615.67 (sales EUR 20,602.82; retention EUR 2,012.85), and demand-proportional EUR 38,075.47 (sales EUR 35,911.42; retention EUR 2,164.05). All three ship 392 units, with full-exposure counts 50, 10, and 28, respectively. Improvement percentages are 101.88% and 19.91%. The independently verified rerun CSVs have now been committed to `results/`: `revised_benchmark_comparison_rerun.csv`, `revised_request_based_shipments_rerun.csv`, and `revised_demand_proportional_shipments_rerun.csv`. For both policies, all 200 shipment decisions match the original recovered algorithm exactly; numerical evaluation of each fixed allocation reproduces the objectives, revenue/retention breakdowns, exposure counts, and shipment totals shown above. The saved full MILP summary was also checked against the verified baseline allocation.
-
-**Optional full Pyomo/HiGHS rerun**:
+To regenerate the benchmark evaluations using Pyomo/HiGHS:
 
 ```powershell
 py src/compare_zara_revised.py
 ```
 
-The full rerun writes only new files: `results/revised_benchmark_comparison_rerun.csv`, `results/revised_request_based_shipments_rerun.csv`, and `results/revised_demand_proportional_shipments_rerun.csv`. Archived results and input CSVs are not overwritten.
+The outputs include:
 
-**Version distinction:** A recovered older script (`compare_zara_strategies.py`, not used for reported results) applies a different alphabetical tie-breaking rule for the proportional policy and independently evaluates to EUR 38,206.80. The revised producer breaks tied fulfillment ratios by higher unmet demand and then original store order. The report's EUR 38,075.47 is reproduced by the revised policy. Do not combine the two versions.
+- `results/revised_benchmark_comparison_rerun.csv`
+- `results/revised_request_based_shipments_rerun.csv`
+- `results/revised_demand_proportional_shipments_rerun.csv`
 
-## Re-run the verified baseline from this repository
+These reproduce **EUR 22,615.67** for request-based allocation and **EUR 38,075.47** for demand-proportional allocation under the common original model. The reported policies are generated by this *revised* implementation, not an older version with a different tie-breaking rule.
 
-From the repository root, with Python, Pyomo and HiGHS installed:
+The stronger, exposure-aware greedy policy is in `src/exposure_aware_greedy.py`:
 
 ```powershell
-py -m pip install -r requirements.txt
-py src/verify_saved_results.py
-py src/solve_zara_final.py
+py src/exposure_aware_greedy.py
 ```
 
-The main script loads the six input CSVs from `data/` and saves the baseline allocation to `results/`. Keep a copy of saved outputs before rerunning if you need to preserve an earlier allocation variant.
+It evaluates one-unit shipments and exposure-completing bundles based on their positive incremental modeled value per shipped unit. It respects stock and store-capacity constraints but **does not guarantee the global MILP optimum**. The verified result is **EUR 45,507.60** (392 shipped, 91 retained; 47 full-, 2 partial- and 1 no-exposure store–article combinations). Its near-optimal performance is specific to this dataset and does not independently validate the assumed sales model.
 
-## Demand-scarcity stress test (two scenarios completed)
+Reproduce the no-shipment reference and incremental comparisons with:
+
+```powershell
+py zara_no_shipment_incremental.py
+```
+
+Output: `results/no_shipment_incremental_comparison.csv`. This script reads the original synthetic inputs and saved benchmark results; it **does not change model assumptions or allocate shipments**.
+
+## 6. Sensitivity analysis: archived versus updated solves
+
+The original eleven-scenario archive is `results/zara_sensitivity_detailed.csv`. It contains **7 solver-optimal terminations and 4 feasible solutions stopped by the original 120-second limit**. Those are *historical statuses*, not the status of the final analysis.
+
+The four previously time-limited cases have since been rerun: the **baseline**, **`rho=0.8`**, **`threshold=4`**, and **`stock=0.8x`**. The **`capacity=0.8x`** case was also rerun to confirm its previous optimal status. These runs reported optimal termination within their solver tolerances. This is numerical certification, **not an exact analytical proof**.
+
+| Scenario | Final modeled objective (EUR) | Updated evidence |
+|---|---:|---|
+| Baseline | 45,657.45 | Separate reproduced baseline solve |
+| Partial exposure `rho=0.8` | 45,665.60 | `zara_sensitivity_rho_0_8_2026-11-15.csv` |
+| Full threshold `threshold=4` | 44,638.06 | 300-second rerun, 0.0099% reported gap |
+| Warehouse stock `stock=0.8x` | 41,874.40 | 300-second rerun, 0.0097% reported gap |
+| Receiving capacity `capacity=0.8x` | 42,844.50 | Independently repeated, 0.0007% reported gap |
+
+The last three results are in **`results/zara_sensitivity_detailed_rerun.csv`**, while the separate `rho=0.8` and baseline reproductions are stored in the files named above. The other seven scenarios retain their archived solver-optimal status; they have not all been independently rerun in the same 300-second batch.
+
+The other reported sensitivity objectives are:
+
+| Scenario | Modeled objective (EUR) |
+|---|---:|
+| Partial factor `rho=0.4` | 45,657.45 |
+| Full threshold `threshold=2` | 45,853.10 |
+| Warehouse stock `stock=1.2x` | 48,640.85 |
+| Receiving capacity `capacity=1.2x` | 47,686.95 |
+| Retained value `rate=0.20` | 44,945.40 |
+| Retained value `rate=0.50` | 46,369.50 |
+
+**Preserving historical evidence:** The recovered original script had written `gap_percent=0` when a run terminated with status `optimal`, even when the recorded upper bound exceeded the incumbent. Those historical zeros must **not** be interpreted as measured zero gaps. The restored script records bound-derived numerical gaps for new reruns.
+
+Read-only check of the original eleven archived scenarios:
+
+```powershell
+py src/zara_sensitivity_detailed_repro.py --check-archive
+```
+
+To reproduce one of the updated detailed scenarios, for example:
+
+```powershell
+py src/zara_sensitivity_detailed_repro.py --only "threshold=4" --seconds 300 --retry
+```
+
+**Caution:** This command can update the corresponding row in `results/zara_sensitivity_detailed_rerun.csv`. Make a copy before rerunning if you need to retain the exact recorded result. The original `results/zara_sensitivity_detailed.csv` is never overwritten by this script.
+
+### Threshold-sensitivity figure
+
+The updated graph uses `threshold=2` and the baseline from the original archive, plus the updated `threshold=4` result from the rerun CSV:
+
+```powershell
+py -m pip install matplotlib
+py src/plot_threshold_sensitivity.py
+```
+
+`matplotlib` is an **additional dependency for plotting** and is not currently included in `requirements.txt`. The script writes `results/figures/threshold_sensitivity_updated.png` and `.pdf`.
+
+## 7. Demand-scarcity stress tests
+
+Forecast demand is intentionally large enough that **none of the 200 baseline forecast-demand ceilings binds**. The demand tests investigate this limitation by reducing forecasts while keeping other model inputs unchanged. This is a model-calibration limitation, not evidence about Zara's actual demand.
 
 ```powershell
 py src/demand_stress_test.py --factor 0.40 --seconds 180
 py src/demand_stress_test.py --factor 0.20 --seconds 180
 ```
 
-The script changes **forecast demand only**, with integer half-up rounding, and writes `results/zara_demand_stress_test.csv`. It does **not** modify the original inputs or baseline outputs. If a solve hits the time limit, it records the status without asserting optimality. Additional factors can be tested in separate runs. Both runs have been completed and the output CSV has been saved to this repository. The saved statuses are solver-reported optimal; numerical MIP gaps and raw bounds were not exported.
+The results are saved separately in `results/zara_demand_stress_test.csv`.
 
+| Measure | Baseline | 40% demand | 20% demand |
+|---|---:|---:|---:|
+| Modeled objective (EUR) | 45,657.45 | 44,883.00 | 35,977.57 |
+| Expected sales units | 566.20 | 559.15 | 446.48 |
+| Units shipped | 392 | 392 | 360 |
+| Units retained | 91 | 91 | 123 |
+| Fully exposed store–article combinations | 50 | 50 | 49 |
+| Binding forecast-demand ceilings | 0 | 11 | 139 |
+| Changed shipment variables vs baseline | — | 53 | 106 |
 
-### Demand sensitivity: 40% forecast scenario (15 November 2026)
+Both stress-test runs reported solver-optimal termination; their output CSV does not export the numerical best bound or final MIP gap. These are **hypothetical, severe demand reductions**, not estimates of realistic market changes.
 
-A new local Pyomo/HiGHS run with `py src/demand_stress_test.py --factor 0.40 --seconds 180` reports **optimal** termination. Forecast demand alone was rescaled, with all original stock, capacities, prices, exposure and saturation parameters unchanged. The result is archived at `results/zara_demand_stress_test.csv`.
+## 8. Ablation experiments: exposure and saturation
 
-- Modeled objective: **EUR 44,883.00**, consisting of **EUR 43,200.55** modeled current sales revenue and **EUR 1,682.45** assigned retained-stock value.
-- 392 units shipped; 91 retained; 559.15 expected sales units; all 50 store–article pairs full exposure.
-- **11 of 200 positive forecast-demand ceilings bind**, compared with zero at baseline.
-- **53 of 200 individual shipment quantities differ** from the archived baseline solution (a count of changed entries, not the number of units reallocated).
-- Same aggregate retained quantity but different article/size composition: retained value differs from baseline.
+The ablation experiments optimize three policies on identical baseline inputs: (1) the original exposure-and-saturation MILP, (2) a model **without exposure**, and (3) a model with exposure but **linear sales** instead of saturation.
 
-**Interpretation:** reducing all synthetic forecasts to 40% of their original levels decreases modeled value and changes the allocation, but demand is still nonbinding in most combinations. This is an intentionally severe sensitivity scenario, not an estimate of actual Zara demand. A 20% demand stress test below produces a more strongly demand-constrained case.
+Because their internal objective functions differ, **native objectives must not be compared directly**. We instead fix each resulting shipment allocation and evaluate it using the original MILP's sales and retained-stock assumptions.
 
-### Demand sensitivity: 20% forecast scenario (15 November 2026)
+Read-only archival check:
 
-The additional local HiGHS run with `py src/demand_stress_test.py --factor 0.20 --seconds 180` reports **optimal** termination, archived together with the 40% result at `results/zara_demand_stress_test.csv`. Forecasts were independently multiplied by 0.20 with half-up integer rounding; original input CSVs were unchanged.
+```powershell
+py src/zara_ablation_experiment.py --check-archive
+```
 
-- Objective: **EUR 35,977.57** = **EUR 32,674.62** expected sales revenue + **EUR 3,302.95** assigned retained-stock value.
-- **446.48** expected sales units, **360** units shipped and **123** units retained (warehouse total remains 483).
-- **49 full-exposure**, **1 partial-exposure** store–article combination, **0 no-exposure**.
-- **139/200** positive demand ceilings binding, versus zero in the original baseline.
-- **106/200** individual shipment variables differ from the baseline solution; this counts changed decisions, not the total quantity of stock relocated.
-- Compared with baseline EUR 45,657.45, the modeled objective declines by approximately **21.2%**. This comparison changes the demand assumptions and is not an estimate of actual retailer losses.
+Fresh three-model solve:
 
-Together, the 40% and 20% scenarios show an increasingly demand-constrained model: demand reductions initially change shipment composition without aggregate shipment reduction, then also reduce aggregate shipments and increase warehouse retention. These intentionally extreme shocks explore model behavior, not likely fluctuations in actual Zara sales. Additional sensitivity scenarios or repeated synthetic datasets would be needed to establish broad robustness.
+```powershell
+py src/zara_ablation_experiment.py --seconds 300
+```
 
+The rerun writes `results/zara_ablation_comparison_rerun.csv` and `results/zara_ablation_shipments_rerun.csv`, preserving the original archived results. The verified rerun reproduced the **same 200 shipment decisions per policy** as the original archive.
 
-### Partial-exposure sensitivity: rho=0.8 rerun (15 November 2026)
+| Shipment allocation, evaluated under original model | Value (EUR) | Loss vs full MILP | Full exposure |
+|---|---:|---:|---:|
+| Full MILP | 45,657.45 | 0.00% | 50 |
+| Without exposure | 30,920.85 | 32.28% | 17 |
+| Linear sales | 42,975.55 | 5.87% | 50 |
 
-The local command `py src/zara_sensitivity_safe.py --only "rho=0.8" --seconds 300 --retry-timeouts` reran ONLY the partial-exposure factor 0.8 scenario, keeping all other input assumptions unchanged. It reported **optimal** termination and was archived at `results/zara_sensitivity_rho_0_8_2026-11-15.csv`.
+The exposure-ignorant allocation has 17 full-, 14 partial- and 19 no-exposure store–article combinations under the original model's eligibility rules. The linear-sales allocation achieves full exposure everywhere but loses modeled value under the original concave saturation functions. These losses measure **allocation quality under the assumed model**, not changes in observed retail sales.
 
-- Modeled objective **EUR 45,665.60** = EUR 44,058.05 expected sales revenue + EUR 1,607.55 assigned retained-stock value.
-- 564.67 expected sales units, 392 units shipped, 91 retained, 48 full-exposure + 2 partial-only combinations.
-- Compared with reproduced baseline `rho=0.6` objective EUR 45,657.45, this is **EUR 8.15 higher** (approximately **0.0179%**). It is possible for expected sales units to decline while revenue rises because product prices differ.
-- The older 120-second sensitivity output contained a time-limited feasible incumbent EUR 45,625.90; that is **not** the proven optimum and should be replaced in the principal sensitivity results table.
-- The new output CSV reports `status=optimal` but does not record the solver bound or numeric relative MIP gap. The 300-second rerun must be identified separately from the original 120-second sensitivity experiments. The older `results/zara_sensitivity_detailed.csv` is retained as an archival record, not the authoritative `rho=0.8` result.
+## 9. Residual-exposure robustness experiment
 
-
-## Exposure-assumption robustness experiment (completed; reproduction instructions)
-
-The baseline synthetic model assumes **zero** expected current sales if a store/article fails to meet the partial-exposure threshold for every major size. This is deliberately strong. The new script `src/exposure_robustness.py` changes only that assumption:
-
-- No exposure: `e = eta` (proposed `eta=0.20`, meaning 20% of the concave saturation potential).
-- Partial exposure: `e = rho = 0.60`, unchanged.
-- Full exposure: `e = 1.00`, unchanged.
-
-The script verifies that the archived no-exposure-policy and full-MILP allocations reproduce their original **zero-residual** ablation evaluations. It then (a) values both saved shipment allocations under the **same softened exposure rule** and (b) reoptimizes the MILP using a separate set of linear constraints that implement this rule. This avoids comparing objectives from different economic models.
-
-Run after downloading the latest GitHub ZIP, inside the **innermost project folder**:
+The baseline assumes zero modeled sales for assortments that fail the partial-exposure requirement. To test that strong assumption, the robustness experiment allows **20% residual sales potential** when exposure is absent; the partial factor remains 60% and full exposure remains 100%.
 
 ```powershell
 py src/exposure_robustness.py --residual 0.20 --seconds 300
 ```
 
-Results will be written to `results/zara_exposure_robustness.csv`. Original baseline data, earlier ablation/sensitivity outputs, and the report are left untouched. If HiGHS times out, the script records the termination status without mislabeling the result as a proved optimum. Any new result requires numerical verification before inclusion in the report. The 20% residual level is hypothetical, not calibrated to observed Zara sales.
+This script reoptimizes the **softened-exposure MILP** and evaluates saved full-MILP and exposure-ignorant allocations under the **same softened sales assumptions**. Its default saved exposure-ignorant input is `results/zara_ablation_shipments.csv`. We independently reran that exposure-ignorant model and verified that its **entire shipment CSV matches the archive exactly**; therefore this saved policy is also the freshly reproduced exposure-ignorant allocation. The exposure-ignorant *optimization problem itself* does not depend on `eta`, so this is **not** a policy that adapts its shipments in response to residual exposure.
 
+| Common evaluation | Zero residual exposure | 20% residual exposure |
+|---|---:|---:|
+| Optimized MILP value (EUR) | 45,657.45 | 45,657.45 |
+| Exposure-ignorant allocation value (EUR) | 30,920.85 | 32,819.82 |
+| Exposure-ignorant loss relative to MILP | 32.28% | 28.12% |
 
-### Completed residual-exposure robustness check (15 November 2026)
+The softened MILP reported solver-optimal termination and still achieved full exposure for all 50 store–article combinations. Its **numerical final bound and MIP gap were not saved**. The residual factor `eta = 0.20` is a hypothetical scenario, not a calibrated sales parameter.
 
-**Local command:** `py src/exposure_robustness.py --residual 0.20 --seconds 300`. The CSV `results/zara_exposure_robustness.csv` has been uploaded and its arithmetic independently checked.
+Output: `results/zara_exposure_robustness.csv`.
 
-- No-exposure factor `eta=0.20`; partial exposure `rho=0.60`; full exposure `1.00`.
-- The reoptimized softened-exposure MILP reported `optimal` termination with objective **EUR 45,657.45** (sales revenue EUR 43,996.00, retention EUR 1,661.45), 392 units shipped and 91 retained; 50/50 full exposure.
-- Fixed baseline shipment allocation evaluated under the softened model: **EUR 45,657.45**.
-- Fixed exposure-ignorant shipment allocation evaluated under the **same** softened model: **EUR 32,819.82**. Under the original zero-residual rule this fixed allocation was worth EUR 30,920.85.
-- Difference vs the softened optimized model: **28.12% lower**, vs 32.28% lower under the original exposure rule.
-- **Scope note:** the exposure-ignorant allocation was *not* reoptimized for the softened sales rule; it is the previously saved no-exposure allocation evaluated under the new common rule. The 20% residual factor is hypothetical, not an estimate of observed retail behavior.
-- The CSV records solver-reported optimal termination but does not include a numerical solver bound or MIP gap.
+## 10. Analytical validation, reproducibility limits and interpretation
 
+The project report also presents an independently proved, **two-store / one-article** validation problem. With six warehouse units, the analytical global optimum is **EUR 57.60**, reproduced by Pyomo. This separate example checks the formulation's exposure, saturation, inventory-conservation and objective logic; it does **not** establish exact global optimality of the full 10-store model.
 
-## Stronger benchmark: deterministic exposure-aware greedy policy
+**What is verified:**
 
-Source: \`src/exposure_aware_greedy.py\`. This script is deliberately **not** a MILP solver and does **not** use the saved MILP allocation to choose shipments. It uses the six synthetic input CSV files to make a deterministic greedy decision at each step:
+- The original synthetic inputs can be regenerated exactly from the fixed seed.
+- The saved baseline allocation passes inventory, exposure, sales and objective checks.
+- The request-based, demand-proportional, greedy and ablation results have been independently reproduced or checked against fixed shipment allocations.
+- The formerly time-limited baseline and selected sensitivity scenarios were rerun with solver-reported optimal termination within configured tolerances.
+- The no-shipment and residual-exposure comparisons use the same economic evaluation rules within each experiment.
 
-1. Consider feasible bundles of missing major sizes that would activate partial/full exposure.
-2. Consider feasible one-unit additions for individual store/article/size combinations.
-3. For each action, compute its incremental current-sales value using the **full original exposure and piecewise saturation model**, minus the retained-stock opportunity value of the shipped units.
-4. Select the strictly positive action with the largest net gain per unit; use stable input order to resolve ties.
-5. Repeat until no improving feasible action remains.
+**Limitations:**
 
-The policy respects article/size warehouse stock and each store's receiving capacity. It evaluates both its own shipments and the saved baseline MILP shipments under the **same original model**, and checks the baseline objective is EUR 45,657.45. The script outputs:
-- \`results/zara_exposure_aware_greedy_summary.csv\`
-- \`results/zara_exposure_aware_greedy_shipments.csv\`
+- All prices, stock, demand, exposure thresholds, saturation functions and retained-stock values are synthetic or hypothetical.
+- The model has one period and deterministic forecasts; transportation, procurement, holding and expansion costs are omitted.
+- The model assigns future economic value to warehouse retention but not to unsold store inventory, a simplifying asymmetry.
+- No baseline forecast-demand ceiling binds; stress testing partially explores this weakness.
+- Several original solver results were time-limited; subsequent numerical solves improve the evidence but are not exact proofs. Raw historical solver logs are unavailable, and numerical MIP gaps were not exported by every reproduction script.
+- The exposure-aware greedy policy is nearly as good as the MILP on this one instance; performance across other synthetic seeds or real datasets is not established.
 
-Run in the project root:
+The project's numerical results describe **the consequences of its assumptions**, rather than measured effects of Zara's real inventory decisions.
 
-\`\`\`powershell
-py src/exposure_aware_greedy.py
-\`\`\`
+## 11. Reference
 
-An independently tested copy on the preserved input dataset obtained a preliminary objective **EUR 45,507.60**, with 392 shipped, 91 retained, 47 fully exposed, two partially exposed and one non-exposed store/article combinations. This is approximately **0.33%** below the reproduced MILP objective, but is **not** a measured gain in real Zara sales. Before inclusion in the final report, reproduce the output from the GitHub script and preserve both output CSVs.
-
-This is a much stronger heuristic than the request-based or demand-proportional baselines, since it **explicitly uses the model's exposure, saturation, price, and retention assumptions**. Accordingly, it is not an independent empirical validation of those assumptions.
-
-
-### Verified exposure-aware greedy benchmark (15 November 2026)
-
-Local reproduction using `py src/exposure_aware_greedy.py` passed the warehouse-stock and store-capacity checks and reproduced the same full-model evaluation of the saved MILP allocation.
-
-Saved results:
-- `results/zara_exposure_aware_greedy_summary.csv` (reported outcomes)
-- `results/zara_exposure_aware_greedy_shipments.csv` (200 integer shipment decisions)
-
-Independent recalculation from the six input CSVs verified:
-- **EUR 45,507.60 modeled objective** = **EUR 43,872.75 current sales revenue** + **EUR 1,634.85 assigned retained value**.
-- **562.29 expected sales units**, **392 shipped**, **91 retained**; all warehouse article/size balances and all ten receiving-capacity inequalities satisfied.
-- **47 full-exposure, 2 partial-only, 1 no-exposure** store–article combinations.
-- **80 of 200** individual shipment quantities differ from the saved full MILP; because the total shipment count is identical, **77 units are reallocated** between shipment locations/categories (half of sum of absolute shipment differences).
-- MILP objective **EUR 45,657.45**, which is **EUR 149.85 (0.3293%) greater relative to the greedy benchmark**.
-- This is a deterministic **model-aware heuristic**, using the same exposure, saturation, prices, and retention assumptions as the MILP. Near-optimality on this ONE synthetic instance does not prove greedy always performs this well, nor does it independently validate the sales assumptions.
-
-Final paper should present this strong comparator along with the original simpler request and demand-proportional benchmarks, avoiding claims of guaranteed large MILP improvements over well-informed heuristics.
+Caro, F., Gallien, J., Díaz, M., García, J., Corredoira, J. M., Montes, M., Ramos, J. A., & Correa, J. (2010). **Zara Uses Operations Research to Reengineer Its Global Distribution Process.** *Interfaces, 40*(1), 71–84. https://doi.org/10.1287/inte.1090.0472
